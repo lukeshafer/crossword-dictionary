@@ -1,1 +1,10 @@
-{}
+{
+  // "extends": "@tsconfig/node18/tsconfig.json",
+  "include": [
+    "sst.config.ts"
+  ],
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+  }
+}

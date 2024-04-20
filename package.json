@@ -4,15 +4,23 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" \u0026\u0026 exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-lite/client": "^0.20.0",
+    "@aws-lite/dynamodb": "^0.3.4",
+    "@aws-lite/dynamodb-types": "^0.3.6",
+    "@aws-sdk/client-dynamodb": "^3.556.0",
+    "electrodb": "^2.13.1",
+    "hono": "^4.2.5",
     "sst": "ion"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.137"
+    "@tsconfig/node18": "^18.2.4",
+    "@types/aws-lambda": "8.10.137",
+    "vite": "^5.2.9"
   }
 }
