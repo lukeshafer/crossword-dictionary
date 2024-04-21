@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "sst dev \"pnpm run --F frontend dev\""
   },
   "keywords": [],
-  "author": "",
+  "author": "Luke Shafer",
   "license": "ISC",
   "dependencies": {
     "@aws-lite/client": "^0.20.0",
@@ -16,11 +17,11 @@
     "@aws-sdk/client-dynamodb": "^3.556.0",
     "electrodb": "^2.13.1",
     "hono": "^4.2.5",
-    "sst": "ion"
+    "sst": "ion",
+    "vite": "^5.2.9"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.4",
-    "@types/aws-lambda": "8.10.137",
-    "vite": "^5.2.9"
+    "@types/aws-lambda": "8.10.137"
   }
 }

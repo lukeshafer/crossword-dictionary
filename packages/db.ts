@@ -1,10 +1,11 @@
 import { Resource } from "sst";
 import awsLite from "@aws-lite/client";
-import dynamoDb from "@aws-lite/dynamodb";
+// @ts-expect-error - No type definitions for this lib
+import ddb from "@aws-lite/dynamodb";
 
 const TABLE_NAME = Resource.DictionaryLookupDb.name;
 
-const aws = await awsLite({ plugins: [dynamoDb] });
+const aws = await awsLite({ plugins: [ddb] });
 
 export const DB = {
   Words: {
@@ -22,7 +23,11 @@ export const DB = {
         return Promise.reject("Word not found.");
       }
 
-      return Item;
+      return {
+        word: Item.word,
+        length: Item.length,
+        start: Item.start,
+      };
     },
     /**
      * @param {object} args
@@ -59,23 +64,28 @@ export const DB = {
      * @param {string} word
      */
     async addWord(word) {
-      /** @type {Record<string, any>} */
-      const properties = {
-        word,
-        length: word.length,
-        start: word[0],
-      };
+      const properties = new Map();
+      properties.set("word", word);
+      properties.set("length", word.length);
+      properties.set("start", word.at(0));
 
       console.log("Word at position", 1, word);
 
-      for (let index = 1; i < word.length; i++) {
-        const position = index + 1;
+      for (let index = 1; index < word.length; index++) {
+        const pos = index + 1;
 
         const offsetWord =
-          word.slice(index, word.length - 1) + word.slice(0, index);
+          word.slice(index, word.length) + word.slice(0, index);
 
-        console.log("Word at position", position, offsetWord);
+        const offsetStart = offsetWord[0];
+
+        console.log("Word at position", pos, offsetWord);
+
+        properties.set(`lengthStart${pos}`, `${word.length}${offsetStart}`);
+        properties.set(`word${pos}`, `${offsetWord}`);
       }
+
+      return Object.fromEntries(properties.entries());
     },
   },
 };
