@@ -1,4 +1,5 @@
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { DB } from "@core/db";
+import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   const searchParams = new URLSearchParams(event.rawQueryString);
@@ -35,15 +36,25 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     }
   }
 
-  const body = JSON.stringify(searches, null, 3);
+  const results = await Promise.all(
+    searches.map(({ text, position }) => {
+      return DB.Words.searchPosition({
+        length,
+        search: text,
+        position,
+      });
+    }),
+  );
 
-  console.log("SEARCHES", body);
+  const body = JSON.stringify(results);
+
+  console.log("SEARCH RESULTS", body);
   const r = {
     statusCode: 200,
     headers: {
       "content-type": "application/json",
     },
-    body: '{ "test": "TEST" }',
+    body,
   };
   console.log({ r });
   return r;

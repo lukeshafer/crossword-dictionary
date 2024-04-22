@@ -1,14 +1,16 @@
-import { DB } from "../db.mjs";
+import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { DB } from "@core/db";
 
-/** @type {import('aws-lambda').APIGatewayProxyHandlerV2} */
-export const handler = async (event) => {
+export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   const { word } = event.pathParameters ?? {};
 
   if (!word)
     return {
       statusCode: 404,
-      body: "you didn't give  a word!",
+      body: "you didn't give a word!",
     };
 
-  return JSON.stringify(await DB.Words.addWord(word), null, 2);
+  const result = JSON.stringify(await DB.Words.addWord(word), null, 2);
+  console.log({ result });
+  return result;
 };

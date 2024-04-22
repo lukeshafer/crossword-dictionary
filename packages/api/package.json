@@ -1,0 +1,17 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "sst": "ion"
+  },
+  "devDependencies": {
+    "@tsconfig/node18": "^18.2.4",
+    "@types/aws-lambda": "8.10.137"
+  },
+  "keywords": [],
+  "author": "Luke Shafer",
+  "license": "ISC"
+}

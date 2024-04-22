@@ -12,11 +12,11 @@ export default $config({
     const db = new sst.aws.Dynamo("DictionaryLookupDb", dynamoArgs);
 
     const api = new sst.aws.ApiGatewayV2("Api");
-    api.route("GET /word", {
+    api.route("GET /word/{word}", {
       handler: "packages/api/getWord.handler",
       link: [db],
     });
-    api.route("GET /word/{word}", {
+    api.route("GET /create/{word}", {
       handler: "packages/api/createWord.handler",
       link: [db],
     });
@@ -25,7 +25,7 @@ export default $config({
       link: [db],
     });
 
-    const site = new sst.aws.StaticSite("Site", {
+    new sst.aws.StaticSite("Site", {
       path: "packages/frontend",
       build: {
         command: "pnpm run vite build",
@@ -47,7 +47,7 @@ export default $config({
 //
 
 /** DynamoDB Configuration */
-const dynamoArgs = {
+const dynamoArgs: sst.aws.DynamoArgs = {
   fields: {
     word: "string",
     lengthStart: "string",
@@ -98,8 +98,4 @@ const dynamoArgs = {
       rangeKey: "word7",
     },
   },
-} as const;
-
-export type GlobalIndexName = keyof (typeof dynamoArgs)["globalIndexes"];
-export type GlobalIndexHashKey<Index extends GlobalIndexName> =
-  (typeof dynamoArgs)["globalIndexes"][Index]["hashKey"];
+};
