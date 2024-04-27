@@ -5,20 +5,14 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "sst dev \"pnpm run --F frontend dev\""
+    "dev": "sst dev \"pnpm run -F frontend dev\"",
+    "f:dev": "pnpm run -F frontend dev"
   },
   "keywords": [],
   "author": "Luke Shafer",
   "license": "ISC",
   "dependencies": {
-    "@aws-lite/client": "^0.20.0",
-    "@aws-lite/dynamodb": "^0.3.4",
-    "@aws-lite/dynamodb-types": "^0.3.6",
-    "@aws-sdk/client-dynamodb": "^3.556.0",
-    "electrodb": "^2.13.1",
-    "hono": "^4.2.5",
-    "sst": "ion",
-    "vite": "^5.2.9"
+    "sst": "ion"
   },
   "devDependencies": {
     "@pulumi/aws": "^6.32.0",
