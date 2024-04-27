@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "sst dev \"pnpm run -F frontend dev\"",
-    "f:dev": "pnpm run -F frontend dev"
+    "f:dev": "pnpm run -F frontend dev",
+    "f:build": "pnpm run -F frontend build"
   },
   "keywords": [],
   "author": "Luke Shafer",

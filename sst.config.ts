@@ -6,6 +6,11 @@ export default $config({
       name: "crossword-dictionary",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
+      providers: {
+        aws: {
+          region: "us-east-2",
+        },
+      },
     };
   },
   async run() {
@@ -28,12 +33,40 @@ export default $config({
     new sst.aws.StaticSite("Site", {
       path: "packages/frontend",
       build: {
-        command: "pnpm run vite build",
+        command: "pnpm run build",
         output: "dist",
       },
       environment: {
         VITE_API_URL: api.url,
       },
+    });
+
+    const newWordQueue = new sst.aws.Queue("NewWordQueue", {
+      transform: {
+        queue: {
+          delaySeconds: 1,
+        },
+      },
+    });
+    newWordQueue.subscribe(
+      {
+        handler: "packages/api/sqs/batchCreateWords.handler",
+        link: [db],
+      },
+      {
+        transform: {
+          eventSourceMapping(args) {
+            args.batchSize = 1;
+            args.maximumBatchingWindowInSeconds = 1;
+          },
+        },
+      },
+    );
+
+    const uploadBucket = new sst.aws.Bucket("WordUploadBucket");
+    uploadBucket.subscribe({
+      link: [uploadBucket, newWordQueue],
+      handler: "packages/api/s3/handleWordListUpload.handler",
     });
 
     return {

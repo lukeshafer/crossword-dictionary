@@ -18,22 +18,29 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
   for (let i = 1; i <= length; i++) {
     const letter = searchParams.get(`char_${i}`);
-    console.log("ROW", { letter, i });
+    // console.log("ROW", { letter, i });
     if (letter) {
+      // console.log("Letter detected:", letter);
       if (!currentSearch) {
+        // console.log("Setting currentSearch with", letter);
         currentSearch = {
           position: i,
           text: letter,
         };
       } else {
+        // console.log("Adding", letter, "to currentSearch");
         currentSearch.text = currentSearch.text + letter;
       }
       continue;
     } else if (currentSearch) {
+      // console.log("Pushing current search", { currentSearch });
       searches.push(currentSearch);
       currentSearch = null;
       continue;
     }
+  }
+  if (currentSearch) {
+    searches.push(currentSearch);
   }
 
   const results = await Promise.all(
@@ -42,13 +49,21 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         length,
         search: text,
         position,
-      });
+      }).then((list) => new Set(list));
     }),
   );
 
-  const body = JSON.stringify(results);
+  const intersection = results.reduce((a, b) => {
+    const results = new Set<string>();
+    for (const aWord of a) {
+      if (b.has(aWord)) results.add(aWord);
+    }
+    return results;
+  });
 
-  console.log("SEARCH RESULTS", body);
+  const body = JSON.stringify(Array.from(intersection));
+
+  console.log("SEARCH RESULTS", { intersection });
   const r = {
     statusCode: 200,
     headers: {
@@ -56,6 +71,5 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     },
     body,
   };
-  console.log({ r });
   return r;
 };

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.564.0",
+    "@aws-sdk/client-sqs": "^3.564.0",
     "sst": "ion"
   },
   "devDependencies": {
