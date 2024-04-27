@@ -1,6 +1,10 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
+    DictionaryLookupDb: {
+      name: string
+      type: "sst.aws.Dynamo"
+    }
     WordUploadBucket: {
       name: string
       type: "sst.aws.Bucket"
@@ -8,10 +12,6 @@ declare module "sst" {
     NewWordQueue: {
       type: "sst.aws.Queue"
       url: string
-    }
-    DictionaryLookupDb: {
-      type: "sst.aws.Dynamo"
-      name: string
     }
   }
 }

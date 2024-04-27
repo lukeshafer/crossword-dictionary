@@ -1,4 +1,4 @@
-import { For, JSX, createEffect, createSignal, on } from "solid-js";
+import { For, JSX, Suspense, createEffect, createResource, on } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 
 type Letter = {
@@ -12,12 +12,51 @@ for (let i = 0; i < DEFAULT_LENGTH; i++) {
   DEFAULT_LETTERS.push({ letter: null });
 }
 
-export default function DictionaryForm() {
-  const [letters, setLetters] = createStore<Array<Letter>>(DEFAULT_LETTERS);
-  const [results, setResults] = createStore<Array<string>>([]);
+type State = {
+  letters: Array<Letter>;
+};
 
-  const grow = () => setLetters(produce((list) => list.push({ letter: null })));
-  const shrink = () => setLetters(produce((list) => list.pop()));
+export default function DictionaryForm() {
+  const [state, setState] = createStore<State>({ letters: DEFAULT_LETTERS });
+
+  const grow = () =>
+    setState(
+      "letters",
+      produce((list) => list.push({ letter: null })),
+    );
+  const shrink = () =>
+    setState(
+      "letters",
+      produce((list) => list.pop()),
+    );
+
+  const [searchResults] = createResource<Array<string>, Array<string | null>>(
+    () => state.letters.map(({ letter }) => letter),
+    async (letters, info) => {
+      console.log("Searching letters in resource");
+      let noLetters = true;
+      const url = new URL(import.meta.env.VITE_API_URL);
+      url.pathname = "/search";
+      url.searchParams.set("length", String(letters.length));
+      letters.forEach((letter, index) => {
+        if (letter) {
+          url.searchParams.set(`char_${index + 1}`, letter);
+          noLetters = false;
+        }
+      });
+
+      if (noLetters) return [];
+
+      const res = await fetch(url);
+
+      const json = await res.json().catch(() => ({}));
+      if (Array.isArray(json)) {
+        return json.sort();
+      } else {
+        return info.value ?? [];
+      }
+    },
+  );
 
   return (
     <main>
@@ -52,41 +91,25 @@ export default function DictionaryForm() {
               return shrink();
             }
           }}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const url = new URL(import.meta.env.VITE_API_URL);
-            url.pathname = "/search";
-            url.searchParams.set("length", String(letters.length));
-            letters.forEach(({ letter }, index) => {
-              if (letter) url.searchParams.set(`char_${index + 1}`, letter);
-            });
-
-            const res = await fetch(url);
-            // console.log({ res });
-
-            const json = await res.json().catch(() => ({}));
-            if (Array.isArray(json)) {
-              setResults(json.sort());
-            }
-          }}
+          onSubmit={async (e) => e.preventDefault()}
         >
           <ul class="flex gap-2">
-            <For each={letters}>
+            <For each={state.letters}>
               {(_, index) => (
                 <li>
                   <DictionaryInput
-                    setLetter={(value) =>
-                      setLetters(index(), { letter: value || null })
-                    }
-                    grow={grow}
-                    shrink={shrink}
+                    value={state.letters[index()].letter ?? ""}
+                    setValue={(value) => {
+                      const i = index();
+                      setState("letters", i, { letter: value || null });
+                    }}
                   />
                 </li>
               )}
             </For>
           </ul>
           <button
-            class="border-gray-500 border-2 rounded px-2 py-1 bg-sky-100"
+            class="border-gray-500 border-2 px-2 py-1 bg-sky-100 focus:border-brand-outline"
             type="submit"
           >
             Search
@@ -94,7 +117,9 @@ export default function DictionaryForm() {
         </form>
       </div>
       <ul class="grid gap-2 mx-auto max-w-sm ">
-        <For each={results}>{(string) => <li>{string}</li>}</For>
+        <Suspense fallback="Loading...">
+          <For each={searchResults()}>{(string) => <li>{string}</li>}</For>
+        </Suspense>
       </ul>
     </main>
   );
@@ -106,7 +131,7 @@ function SizeButton(
   return (
     <button
       {...props}
-      class="bg-gray-50 border-gray-500 border-2 w-8 h-8 grid items-center pb-1 font-bold text-center"
+      class="bg-sky-100 border-gray-500 focus:border-brand-outline border-2 w-8 h-8 grid items-center pb-1 font-bold text-center"
     />
   );
 }
@@ -115,23 +140,19 @@ const GROW_CHARS = ["=", "+"];
 const SHRINK_CHARS = ["-", "_"];
 
 function DictionaryInput(props: {
-  setLetter: (letter: string) => void;
-  grow: () => void;
-  shrink: () => void;
+  value: string;
+  setValue: (letter: string) => void;
 }) {
-  const [value, setValue] = createSignal("");
-  createEffect(on(value, (v) => props.setLetter(v)));
-
   return (
     <input
-      value={value()}
-      class="border-gray-500 border-2 h-16 w-16 text-3xl text-center"
+      value={props.value}
+      class="border-gray-500 border-2 h-16 w-16 text-3xl text-center focus:border-brand-outline"
       pattern="[A-Z]"
       maxLength="1"
       onKeyDown={(e) => {
         switch (e.key) {
           case "Backspace":
-            if (!value()) focusPrevSiblingInput(e.currentTarget);
+            if (!props.value) focusPrevSiblingInput(e.currentTarget);
             return;
           case "ArrowRight":
             return focusNextSiblingInput(e.currentTarget);
@@ -144,7 +165,7 @@ function DictionaryInput(props: {
         e.currentTarget.value = letter;
 
         if (e.currentTarget.validity.patternMismatch === true) {
-          e.currentTarget.value = value();
+          e.currentTarget.value = props.value;
           return;
         }
 
@@ -152,7 +173,7 @@ function DictionaryInput(props: {
           focusNextSiblingInput(e.currentTarget);
         }
 
-        setValue(letter);
+        props.setValue(letter);
       }}
       type="text"
       maxlength={1}
